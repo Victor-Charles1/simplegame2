@@ -45,7 +45,7 @@ const player = (function(){
     let currentPlayer = 'X';
 
     const getCurrentPlayer = () => currentPlayer;
-    
+
     const switchPlayer = () => {
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
     };
@@ -60,4 +60,46 @@ const player = (function(){
     };
     
     
+})();
+
+const gameFlow =(function(){
+
+    // const game = gameBoard(playerSelection)
+    // const playerX = player(name)
+    // const playerO = player(name)
+    const currentPlayerIndex = 0
+    // 
+
+    const start = function(){
+        const game = gameBoard()
+
+        
+        //display grid on console log
+        console.log ()
+
+
+    }
+
+    // const switchPlayer = function(){
+    //     return function toggle(){
+    //         currentPlayerIndex = currentPlayerIndex = 0 ? 1 : 0;
+    //         console.log("It is Player" + currentPlayerIndex+ "turn; ")
+    //         return currentPlayerIndex
+    //     }
+
+    // }
+
+    const handlePLayerMove = function(cellIndex){
+        if (gameActive !=true || game.boardGrid[cellIndex]!=''){
+            return
+        }
+
+    }
+
+    
+
+
+
+
+
 })();
