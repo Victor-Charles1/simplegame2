@@ -41,7 +41,7 @@ const gameBoard = (function(){
 
 })();
 
-const player = (function(){
+const Player = (function(){
     let currentPlayer = 'X';
 
     const getCurrentPlayer = () => currentPlayer;
@@ -62,7 +62,7 @@ const player = (function(){
     
 })();
 
-const GameLogic = (function() {
+const gameLogic = (function() {
     'use strict';
 
     const winningConditions = [
@@ -82,7 +82,7 @@ const GameLogic = (function() {
     };
 
     const checkDraw = (board) => {
-        return !board.includes('');
+        return !board.includes('');//If board is full
     };
 
     return {
@@ -92,48 +92,90 @@ const GameLogic = (function() {
 })();
 
 const gameFlow =(function(){
+    let gameActive = true;
 
-    // const game = gameBoard(playerSelection)
-    // const playerX = player(name)
-    // const playerO = player(name)
-    const currentPlayerIndex = 0
-    // 
+    const startGame = () => {
+        DisplayController.createBoard();
+        DisplayController.updateStatus(
+            DisplayController.gameStateMessage.currentTurn(Player.getCurrentPlayer())
+        );
+        setupEventListeners();
+    };
 
-    const start = function(){
-        const game = gameBoard()
+    const setupEventListeners = () => {
+        DisplayController.bindCellClick(handleCellClick);
+        DisplayController.bindResetClick(resetGame);
+    };
 
-        
-        //display grid on console log
-        console.log ()
+    const handleCellClick = (index) => {
+        if (!gameActive) return;
 
+        const currentPlayer = Player.getCurrentPlayer();
+        const moveSuccess = GameBoard.setCell(index, currentPlayer);
 
-    }
+        if (moveSuccess) {
+            DisplayController.updateCell(index, currentPlayer);
+            checkGameResult();
+        }
+    };
+    const checkGameResult = () => {
+        const currentBoard = GameBoard.getBoard();
+        const winner = GameLogic.checkWin(currentBoard);
 
-    // const switchPlayer = function(){
-    //     return function toggle(){
-    //         currentPlayerIndex = currentPlayerIndex = 0 ? 1 : 0;
-    //         console.log("It is Player" + currentPlayerIndex+ "turn; ")
-    //         return currentPlayerIndex
-    //     }
-
-    // }
-
-    const makeMove = function(cellIndex){
-        if (gameActive !=true || game.boardGrid[cellIndex]!=''){
-            return
+        if (winner) {
+            DisplayController.updateStatus(
+                `Player ${winner} has won!`
+            );
+            gameActive = false;
+            return;
         }
 
-    }
+        if (GameLogic.checkDraw(currentBoard)) {
+            DisplayController.updateStatus(
+                'Game ended in a draw!'
+            );
+            gameActive = false;
+            return;
+        }
 
+        Player.switchPlayer();
+        DisplayController.updateStatus(
+            `It's ${Player.getCurrentPlayer()}'s turn`
+        );
+    };
+    const resetGame = () => {
+        GameBoard.resetBoard();
+        Player.resetPlayer();
+        gameActive = true;
+        startGame();
+    };
+
+    // Console interface
+    const makeMove = (index) => {
+        if (!gameActive) {
+            console.log("Game is not active. Reset to play again.");
+            return;
+        }
+        
+        handleCellClick(index);
+    };
+
+    const getState = () => {
+        return {
+            board: GameBoard.getBoard(),
+            currentPlayer: Player.getCurrentPlayer(),
+            gameActive
+        };
+    };
+
+    // Initialize game when DOM is loaded
+    document.addEventListener('DOMContentLoaded', startGame);
     return {
         makeMove,
         resetGame,
         getState
     };
-    
 
 
-
-
-
+   
 })();
