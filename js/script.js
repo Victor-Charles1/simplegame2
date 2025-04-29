@@ -40,3 +40,24 @@ const gameBoard = (function(){
 
 
 })();
+
+const player = (function(){
+    let currentPlayer = 'X';
+
+    const getCurrentPlayer = () => currentPlayer;
+    
+    const switchPlayer = () => {
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+    };
+    const resetPlayer = () => {
+        currentPlayer = 'X';
+    };
+
+    return {
+        getCurrentPlayer,
+        switchPlayer,
+        resetPlayer
+    };
+    
+    
+})();
