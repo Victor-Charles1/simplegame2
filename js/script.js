@@ -62,6 +62,35 @@ const player = (function(){
     
 })();
 
+const GameLogic = (function() {
+    'use strict';
+
+    const winningConditions = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
+        [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
+        [0, 4, 8], [2, 4, 6]             // diagonals
+    ];
+
+    const checkWin = (board) => {
+        for (let condition of winningConditions) {
+            const [a, b, c] = condition;
+            if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                return board[a]; // Returns 'X' or 'O' if winner
+            }
+        }
+        return null;
+    };
+
+    const checkDraw = (board) => {
+        return !board.includes('');
+    };
+
+    return {
+        checkWin,
+        checkDraw
+    };
+})();
+
 const gameFlow =(function(){
 
     // const game = gameBoard(playerSelection)
@@ -89,13 +118,18 @@ const gameFlow =(function(){
 
     // }
 
-    const handlePLayerMove = function(cellIndex){
+    const makeMove = function(cellIndex){
         if (gameActive !=true || game.boardGrid[cellIndex]!=''){
             return
         }
 
     }
 
+    return {
+        makeMove,
+        resetGame,
+        getState
+    };
     
 
 
