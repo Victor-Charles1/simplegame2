@@ -1,97 +1,60 @@
-const GameBoard = (function(){
-    let board = Array(9).fill('')
+const gameBoard = (function() {
+    'use strict';
 
-    const getBoard = function (){
-    return board;
-    }
+    let board = Array(9).fill('');
 
-    const updateBoard = function (index, symbol){
+    const getBoard = () => [...board];
+    const updateCell = (index, symbol) => {
         if (index >= 0 && index < 9 && board[index] === '') {
             board[index] = symbol;
             return true;
         }
         return false;
-    }
-
-    const clearBoard = function (){
-         board = Array(9).fill('')
-    }
-
-    const isCellEmpty = function(index){
-        //
-        if(boardGrid[index]===''){
-            return true
-        }else{
-            return false
-        }
-    }
-
-    const isBoardFull = function(){
-        return !board.includes('');
-     
-    }
-    return {
-        getBoard,
-        updateBoard,
-        clearBoard,
-        isBoardFull,
-        isCellEmpty
     };
+    const clearBoard = () => { board = Array(9).fill(''); };
+    const isCellEmpty = index => board[index] === '';
+    const isBoardFull = () => !board.includes('');
 
-
+    return { getBoard, updateCell, clearBoard, isBoardFull, isCellEmpty };
 })();
 
-const Player = (function(){
+const playerManager = (function() {
+    'use strict';
+
     let currentPlayer = 'X';
 
-    const getCurrentPlayer = () => currentPlayer;
+    const getCurrent = () => currentPlayer;
+    const switchPlayer = () => { currentPlayer = currentPlayer === 'X' ? 'O' : 'X'; };
+    const reset = () => { currentPlayer = 'X'; };
 
-    const switchPlayer = () => {
-        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-    };
-    const resetPlayer = () => {
-        currentPlayer = 'X';
-    };
-
-    return {
-        getCurrentPlayer,
-        switchPlayer,
-        resetPlayer
-    };
-    
-    
+    return { getCurrent, switchPlayer, reset };
 })();
 
 const gameLogic = (function() {
     'use strict';
 
     const winningConditions = [
-        [0, 1, 2], [3, 4, 5], [6, 7, 8], // rows
-        [0, 3, 6], [1, 4, 7], [2, 5, 8], // columns
-        [0, 4, 8], [2, 4, 6]             // diagonals
+        [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+        [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+        [0, 4, 8], [2, 4, 6]             // Diagonals
     ];
 
-    const checkWin = (board) => {
-        for (let condition of winningConditions) {
+    const checkWin = board => {
+        for (const condition of winningConditions) {
             const [a, b, c] = condition;
             if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-                return board[a]; // Returns 'X' or 'O' if winner
+                return board[a];
             }
         }
         return null;
     };
 
-    const checkDraw = (board) => {
-        return !board.includes('');//If board is full
-    };
+    const checkDraw = board => !board.includes('');
 
-    return {
-        checkWin,
-        checkDraw
-    };
+    return { checkWin, checkDraw };
 })();
 
-const DisplayController = (function(){
+const displayController = (function() {
     'use strict';
 
     const elements = {
@@ -100,18 +63,18 @@ const DisplayController = (function(){
         resetButton: document.getElementById('reset')
     };
 
-    const gameStateMessage = {
-        win: (player) => `Player ${player} has won!`,
+    const messages = {
+        win: player => `Player ${player} wins!`,
         draw: 'Game ended in a draw!',
-        currentTurn: (player) => `It's ${player}'s turn`
+        currentTurn: player => `${player}'s turn`
     };
 
     const createBoard = () => {
         elements.board.innerHTML = '';
-        GameBoard.getBoard().forEach((cell, index) => {
+        gameBoard.getBoard().forEach((cell, index) => {
             const cellElement = document.createElement('div');
-            cellElement.classList.add('cell');
-            cellElement.setAttribute('data-index', index);
+            cellElement.className = 'cell';
+            cellElement.dataset.index = index;
             cellElement.textContent = cell;
             elements.board.appendChild(cellElement);
         });
@@ -122,124 +85,99 @@ const DisplayController = (function(){
         if (cell) cell.textContent = value;
     };
 
-    const updateStatus = (message) => {
+    const updateStatus = message => {
         elements.status.textContent = message;
         console.log(message);
     };
 
-    const bindCellClick = (handler) => {
-        elements.board.addEventListener('click', (event) => {
-            const clickedCell = event.target;
-            if (!clickedCell.classList.contains('cell')) return;
-            const index = parseInt(clickedCell.getAttribute('data-index'));
+    const bindCellClick = handler => {
+        elements.board.addEventListener('click', event => {
+            const target = event.target;
+            if (!target.classList.contains('cell')) return;
+            const index = parseInt(target.dataset.index, 10);
             handler(index);
         });
     };
 
-    const bindResetClick = (handler) => {
+    const bindResetClick = handler => {
         elements.resetButton.addEventListener('click', handler);
     };
 
-    return {
-        createBoard,
-        updateCell,
-        updateStatus,
-        gameStateMessage,
-        bindCellClick,
-        bindResetClick
-    };
-
+    return { createBoard, updateCell, updateStatus, bindCellClick, bindResetClick, messages };
 })();
 
-const gameFlow =(function(){
-    let gameActive = true;
+const gameController = (function() {
+    'use strict';
+
+    let isActive = true;
 
     const startGame = () => {
-
-        GameBoard.clearBoard();
-        Player.resetPlayer();
-
-        DisplayController.createBoard();
-        DisplayController.updateStatus(
-            `Player ${Player.getCurrentPlayer()}'s turn`
-        );
+        gameBoard.clearBoard();
+        playerManager.reset();
+        displayController.createBoard();
+        displayController.updateStatus(displayController.messages.currentTurn(playerManager.getCurrent()));
         setupEventListeners();
     };
 
     const setupEventListeners = () => {
-        DisplayController.bindCellClick(handleCellClick);
-        DisplayController.bindResetClick(resetGame);
+        displayController.bindCellClick(handleCellClick);
+        displayController.bindResetClick(resetGame);
     };
 
-    const handleCellClick = (index) => {
-        if (!gameActive) return;
+    const handleCellClick = index => {
+        if (!isActive || !gameBoard.isCellEmpty(index)) return;
 
-        const currentPlayer = Player.getCurrentPlayer();
-        const moveSuccess = GameBoard.setCell(index, currentPlayer);
+        const player = playerManager.getCurrent();
+        if (!gameBoard.updateCell(index, player)) return;
 
-        if (moveSuccess) {
-            DisplayController.updateCell(index, currentPlayer);
-            checkGameResult();
-        }
+        displayController.updateCell(index, player);
+        checkGameState();
     };
-    const checkGameResult = () => {
-        const currentBoard = GameBoard.getBoard();
-        const winner = GameLogic.checkWin(currentBoard);
+
+    const checkGameState = () => {
+        const board = gameBoard.getBoard();
+        const winner = gameLogic.checkWin(board);
 
         if (winner) {
-            DisplayController.updateStatus(
-                `Player ${winner} has won!`
-            );
-            gameActive = false;
+            endGame(displayController.messages.win(winner));
             return;
         }
 
-        if (GameLogic.checkDraw(currentBoard)) {
-            DisplayController.updateStatus(
-                'Game ended in a draw!'
-            );
-            gameActive = false;
+        if (gameLogic.checkDraw(board)) {
+            endGame(displayController.messages.draw);
             return;
         }
 
-        Player.switchPlayer();
-        DisplayController.updateStatus(
-            `It's ${Player.getCurrentPlayer()}'s turn`
-        );
+        playerManager.switchPlayer();
+        displayController.updateStatus(displayController.messages.currentTurn(playerManager.getCurrent()));
     };
+
+    const endGame = message => {
+        isActive = false;
+        displayController.updateStatus(message);
+    };
+
     const resetGame = () => {
-        GameBoard.resetBoard();
-        Player.resetPlayer();
-        gameActive = true;
+        isActive = true;
         startGame();
     };
 
     // Console interface
-    const makeMove = (index) => {
-        if (!gameActive) {
-            console.log("Game is not active. Reset to play again.");
+    const makeMove = index => {
+        if (!isActive) {
+            console.log("Game inactive. Reset to play.");
             return;
         }
-        
         handleCellClick(index);
     };
 
-    const getState = () => {
-        return {
-            board: GameBoard.getBoard(),
-            currentPlayer: Player.getCurrentPlayer(),
-            gameActive
-        };
-    };
+    const getState = () => ({
+        board: gameBoard.getBoard(),
+        currentPlayer: playerManager.getCurrent(),
+        isActive
+    });
 
-    // Initialize game when DOM is loaded
     document.addEventListener('DOMContentLoaded', startGame);
-    return {
-        makeMove,
-        resetGame,
-        getState
-    };
 
-
-   
+    return { makeMove, resetGame, getState };
 })();
