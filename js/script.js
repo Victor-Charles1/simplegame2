@@ -1,4 +1,4 @@
-const gameBoard = (function(){
+const GameBoard = (function(){
     let board = Array(9).fill('')
 
     const getBoard = function (){
@@ -91,13 +91,77 @@ const gameLogic = (function() {
     };
 })();
 
+const DisplayController = (function(){
+    'use strict';
+
+    const elements = {
+        board: document.getElementById('board'),
+        status: document.getElementById('status'),
+        resetButton: document.getElementById('reset')
+    };
+
+    const gameStateMessage = {
+        win: (player) => `Player ${player} has won!`,
+        draw: 'Game ended in a draw!',
+        currentTurn: (player) => `It's ${player}'s turn`
+    };
+
+    const createBoard = () => {
+        elements.board.innerHTML = '';
+        GameBoard.getBoard().forEach((cell, index) => {
+            const cellElement = document.createElement('div');
+            cellElement.classList.add('cell');
+            cellElement.setAttribute('data-index', index);
+            cellElement.textContent = cell;
+            elements.board.appendChild(cellElement);
+        });
+    };
+
+    const updateCell = (index, value) => {
+        const cell = document.querySelector(`[data-index="${index}"]`);
+        if (cell) cell.textContent = value;
+    };
+
+    const updateStatus = (message) => {
+        elements.status.textContent = message;
+        console.log(message);
+    };
+
+    const bindCellClick = (handler) => {
+        elements.board.addEventListener('click', (event) => {
+            const clickedCell = event.target;
+            if (!clickedCell.classList.contains('cell')) return;
+            const index = parseInt(clickedCell.getAttribute('data-index'));
+            handler(index);
+        });
+    };
+
+    const bindResetClick = (handler) => {
+        elements.resetButton.addEventListener('click', handler);
+    };
+
+    return {
+        createBoard,
+        updateCell,
+        updateStatus,
+        gameStateMessage,
+        bindCellClick,
+        bindResetClick
+    };
+
+})();
+
 const gameFlow =(function(){
     let gameActive = true;
 
     const startGame = () => {
+
+        GameBoard.clearBoard();
+        Player.resetPlayer();
+
         DisplayController.createBoard();
         DisplayController.updateStatus(
-            DisplayController.gameStateMessage.currentTurn(Player.getCurrentPlayer())
+            `Player ${Player.getCurrentPlayer()}'s turn`
         );
         setupEventListeners();
     };
